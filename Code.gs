@@ -67,6 +67,31 @@ function issueQueue() {
   }
 }
 
+function getStatus(id) {
+  const sheet = getQueueSheet_();
+  const today = getTodayString_();
+  const rows = sheet.getDataRange().getValues().slice(1)
+    .filter(function (row) { return toDateString_(row[1]) === today; });
+
+  const mine = rows.find(function (row) { return row[0] === id; });
+  if (!mine) {
+    throw new Error('ไม่พบคิวนี้');
+  }
+
+  const myNumber = mine[2];
+  const ahead = rows.filter(function (row) {
+    return row[3] === 'waiting' && row[2] < myNumber;
+  }).length;
+
+  // Calls always go out in increasing number order (oldest waiting first, never
+  // reverted), so the highest-numbered 'called' row is always the most recent one.
+  const calledNumbers = rows.filter(function (row) { return row[3] === 'called'; })
+    .map(function (row) { return row[2]; });
+  const nowServing = calledNumbers.length ? Math.max.apply(null, calledNumbers) : null;
+
+  return { number: myNumber, status: mine[3], ahead: ahead, nowServing: nowServing };
+}
+
 function checkPasscode_(passcode) {
   const expected = PropertiesService.getScriptProperties().getProperty('STAFF_PASSCODE');
   if (!expected || passcode !== expected) {

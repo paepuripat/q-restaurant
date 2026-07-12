@@ -3,6 +3,24 @@
 <head>
   <base target="_top">
   <?!= include('styles'); ?>
+  <style>
+    .status-line { font-size: 1.1rem; opacity: 0.85; margin-top: 12px; }
+    .called-overlay {
+      position: fixed;
+      inset: 0;
+      background: #facc15;
+      color: #422006;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 24px;
+      z-index: 10;
+    }
+    .called-text { font-size: 3rem; font-weight: 900; margin: 0; }
+    .end-text { font-size: 1.6rem; font-weight: 700; }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -10,25 +28,101 @@
       <button id="bookBtn" class="big-button">จองคิว</button>
       <p id="error" class="error"></p>
     </div>
+
     <div id="ticket" class="hidden">
-      <p class="label">คิวของคุณ</p>
-      <p id="ticketNumber" class="ticket-number">-</p>
+      <div id="waitingView">
+        <p class="label">คิวของคุณ</p>
+        <p id="ticketNumber" class="ticket-number">-</p>
+        <p id="statusLine" class="status-line"></p>
+      </div>
+      <div id="endView" class="hidden">
+        <p id="endText" class="end-text"></p>
+      </div>
     </div>
+  </div>
+
+  <div id="calledView" class="called-overlay hidden">
+    <p class="called-text">ถึงคิวคุณแล้ว 🔔</p>
   </div>
 
   <script>
     var STORAGE_ID_KEY = 'queueId';
     var STORAGE_NUMBER_KEY = 'queueNumber';
+    var POLL_INTERVAL_MS = 7000;
+    var pollTimer = null;
 
-    function showTicket(number) {
-      document.getElementById('prompt').classList.add('hidden');
-      document.getElementById('ticket').classList.remove('hidden');
+    function showWaiting(number, statusText) {
+      document.getElementById('calledView').classList.add('hidden');
+      document.getElementById('endView').classList.add('hidden');
+      document.getElementById('waitingView').classList.remove('hidden');
       document.getElementById('ticketNumber').textContent = number;
+      document.getElementById('statusLine').textContent = statusText || '';
+    }
+
+    function showCalled() {
+      document.getElementById('calledView').classList.remove('hidden');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+
+    function showEnd(status) {
+      document.getElementById('calledView').classList.add('hidden');
+      document.getElementById('waitingView').classList.add('hidden');
+      document.getElementById('endView').classList.remove('hidden');
+      document.getElementById('endText').textContent =
+        status === 'done' ? 'ขอบคุณที่ใช้บริการ' : 'คิวของคุณถูกข้าม';
+      stopPolling();
     }
 
     function showError(message) {
       document.getElementById('error').textContent = message;
     }
+
+    function revealTicket() {
+      document.getElementById('prompt').classList.add('hidden');
+      document.getElementById('ticket').classList.remove('hidden');
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function pollStatus() {
+      var id = sessionStorage.getItem(STORAGE_ID_KEY);
+      if (!id) return;
+
+      google.script.run
+        .withSuccessHandler(function (data) {
+          if (data.status === 'waiting') {
+            var statusText = 'อีก ' + data.ahead + ' คิว · กำลังเรียก: ' + (data.nowServing !== null ? data.nowServing : '-');
+            showWaiting(data.number, statusText);
+          } else if (data.status === 'called') {
+            showCalled();
+          } else {
+            showEnd(data.status);
+          }
+        })
+        .withFailureHandler(function () {
+          // transient read failure; next poll will retry
+        })
+        .getStatus(id);
+    }
+
+    function startPolling() {
+      if (pollTimer) return;
+      pollStatus();
+      pollTimer = setInterval(pollStatus, POLL_INTERVAL_MS);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') {
+        stopPolling();
+      } else if (sessionStorage.getItem(STORAGE_ID_KEY)) {
+        startPolling();
+      }
+    });
 
     document.getElementById('bookBtn').addEventListener('click', function () {
       var btn = document.getElementById('bookBtn');
@@ -39,9 +133,11 @@
         .withSuccessHandler(function (result) {
           sessionStorage.setItem(STORAGE_ID_KEY, result.id);
           sessionStorage.setItem(STORAGE_NUMBER_KEY, result.number);
-          showTicket(result.number);
+          revealTicket();
+          showWaiting(result.number, 'กำลังโหลด...');
+          startPolling();
         })
-        .withFailureHandler(function (err) {
+        .withFailureHandler(function () {
           btn.disabled = false;
           showError('คิวหนาแน่น ลองอีกครั้ง');
         })
@@ -52,7 +148,9 @@
       var savedId = sessionStorage.getItem(STORAGE_ID_KEY);
       var savedNumber = sessionStorage.getItem(STORAGE_NUMBER_KEY);
       if (savedId && savedNumber) {
-        showTicket(savedNumber);
+        revealTicket();
+        showWaiting(savedNumber, 'กำลังโหลด...');
+        startPolling();
       }
     })();
   </script>
