@@ -92,6 +92,24 @@ function getStatus(id) {
   return { number: myNumber, status: mine[3], ahead: ahead, nowServing: nowServing };
 }
 
+function getBoardState() {
+  const sheet = getQueueSheet_();
+  const today = getTodayString_();
+  const rows = sheet.getDataRange().getValues().slice(1)
+    .filter(function (row) { return toDateString_(row[1]) === today; });
+
+  const calledNumbers = rows.filter(function (row) { return row[3] === 'called'; })
+    .map(function (row) { return row[2]; });
+  const nowServing = calledNumbers.length ? Math.max.apply(null, calledNumbers) : null;
+
+  const next = rows.filter(function (row) { return row[3] === 'waiting'; })
+    .map(function (row) { return row[2]; })
+    .sort(function (a, b) { return a - b; })
+    .slice(0, 5);
+
+  return { nowServing: nowServing, next: next };
+}
+
 function checkPasscode_(passcode) {
   const expected = PropertiesService.getScriptProperties().getProperty('STAFF_PASSCODE');
   if (!expected || passcode !== expected) {
