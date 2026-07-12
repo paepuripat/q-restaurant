@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('styles'); ?>
+</head>
+<body>
+  <div class="container">
+    <div id="prompt">
+      <button id="bookBtn" class="big-button">จองคิว</button>
+      <p id="error" class="error"></p>
+    </div>
+    <div id="ticket" class="hidden">
+      <p class="label">คิวของคุณ</p>
+      <p id="ticketNumber" class="ticket-number">-</p>
+    </div>
+  </div>
+
+  <script>
+    var STORAGE_ID_KEY = 'queueId';
+    var STORAGE_NUMBER_KEY = 'queueNumber';
+
+    function showTicket(number) {
+      document.getElementById('prompt').classList.add('hidden');
+      document.getElementById('ticket').classList.remove('hidden');
+      document.getElementById('ticketNumber').textContent = number;
+    }
+
+    function showError(message) {
+      document.getElementById('error').textContent = message;
+    }
+
+    document.getElementById('bookBtn').addEventListener('click', function () {
+      var btn = document.getElementById('bookBtn');
+      btn.disabled = true;
+      showError('');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          sessionStorage.setItem(STORAGE_ID_KEY, result.id);
+          sessionStorage.setItem(STORAGE_NUMBER_KEY, result.number);
+          showTicket(result.number);
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          showError('คิวหนาแน่น ลองอีกครั้ง');
+        })
+        .issueQueue();
+    });
+
+    (function init() {
+      var savedId = sessionStorage.getItem(STORAGE_ID_KEY);
+      var savedNumber = sessionStorage.getItem(STORAGE_NUMBER_KEY);
+      if (savedId && savedNumber) {
+        showTicket(savedNumber);
+      }
+    })();
+  </script>
+</body>
+</html>
