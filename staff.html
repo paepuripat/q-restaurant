@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('styles'); ?>
+  <style>
+    .container { max-width: 720px; }
+    .gate { display: flex; flex-direction: column; gap: 12px; }
+    input[type="password"] {
+      padding: 16px;
+      font-size: 1.2rem;
+      border-radius: 12px;
+      border: none;
+    }
+    .queue-list { text-align: left; list-style: none; padding: 0; margin: 24px 0; }
+    .queue-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-radius: 12px;
+      background: #1e293b;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .queue-row.called { background: #78350f; }
+    .queue-row.done { opacity: 0.5; }
+    .queue-row.skipped { opacity: 0.4; text-decoration: line-through; }
+    .queue-row .num { font-size: 1.5rem; font-weight: 800; }
+    .queue-row .actions button {
+      margin-left: 8px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-next {
+      background: #22c55e; color: #052e16; font-weight: 700;
+      padding: 16px; width: 100%; border: none; border-radius: 12px;
+      font-size: 1.3rem; cursor: pointer; margin-bottom: 16px;
+    }
+    .btn-done { background: #38bdf8; }
+    .btn-skip { background: #f97316; }
+    .btn-reset {
+      background: #ef4444; color: white; padding: 12px; border: none;
+      border-radius: 8px; cursor: pointer; width: 100%; margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="gate" class="gate">
+      <p class="label">รหัสผ่านพนักงาน</p>
+      <input type="password" id="passcodeInput" placeholder="รหัสผ่าน">
+      <button class="big-button" id="loginBtn">เข้าสู่ระบบ</button>
+      <p id="gateError" class="error"></p>
+    </div>
+
+    <div id="dashboard" class="hidden">
+      <button id="nextBtn" class="btn-next">เรียกคิวถัดไป</button>
+      <ul id="queueList" class="queue-list"></ul>
+      <button id="resetBtn" class="btn-reset">เริ่มวันใหม่</button>
+      <p id="dashError" class="error"></p>
+    </div>
+  </div>
+
+  <script>
+    var passcode = '';
+    var pollTimer = null;
+
+    function showDashboard() {
+      document.getElementById('gate').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+    }
+
+    function renderQueue(rows) {
+      var list = document.getElementById('queueList');
+      list.innerHTML = '';
+      rows.forEach(function (row) {
+        var li = document.createElement('li');
+        li.className = 'queue-row ' + row.status;
+
+        var info = document.createElement('span');
+        var time = row.createdAt ? new Date(row.createdAt).toLocaleTimeString('th-TH') : '';
+        info.innerHTML = '<span class="num">' + row.number + '</span> · ' + row.status + ' · ' + time;
+
+        var actions = document.createElement('span');
+        actions.className = 'actions';
+        if (row.status === 'called') {
+          var doneBtn = document.createElement('button');
+          doneBtn.className = 'btn-done';
+          doneBtn.textContent = 'เสร็จ';
+          doneBtn.addEventListener('click', function () { markDone(row.id); });
+
+          var skipBtn = document.createElement('button');
+          skipBtn.className = 'btn-skip';
+          skipBtn.textContent = 'ข้าม';
+          skipBtn.addEventListener('click', function () { markSkip(row.id); });
+
+          actions.appendChild(doneBtn);
+          actions.appendChild(skipBtn);
+        }
+
+        li.appendChild(info);
+        li.appendChild(actions);
+        list.appendChild(li);
+      });
+    }
+
+    function showDashError(message) {
+      document.getElementById('dashError').textContent = message;
+    }
+
+    function refreshQueue() {
+      google.script.run
+        .withSuccessHandler(renderQueue)
+        .withFailureHandler(function () { showDashError('โหลดข้อมูลไม่สำเร็จ'); })
+        .getQueue(passcode);
+    }
+
+    function startPolling() {
+      if (pollTimer) return;
+      pollTimer = setInterval(refreshQueue, 5000);
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', function () {
+      var input = document.getElementById('passcodeInput').value;
+      document.getElementById('gateError').textContent = '';
+      google.script.run
+        .withSuccessHandler(function (rows) {
+          passcode = input;
+          showDashboard();
+          renderQueue(rows);
+          startPolling();
+        })
+        .withFailureHandler(function () {
+          document.getElementById('gateError').textContent = 'รหัสผ่านไม่ถูกต้อง';
+        })
+        .getQueue(input);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function () {
+      showDashError('');
+      google.script.run
+        .withSuccessHandler(renderQueue)
+        .withFailureHandler(function () { showDashError('เรียกคิวไม่สำเร็จ'); })
+        .callNext(passcode);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      if (!confirm('เริ่มวันใหม่? คิวที่เหลือจะถูกข้าม')) return;
+      showDashError('');
+      google.script.run
+        .withSuccessHandler(renderQueue)
+        .withFailureHandler(function () { showDashError('เริ่มวันใหม่ไม่สำเร็จ'); })
+        .resetDay(passcode);
+    });
+
+    function markDone(id) {
+      showDashError('');
+      google.script.run
+        .withSuccessHandler(renderQueue)
+        .withFailureHandler(function () { showDashError('อัปเดตไม่สำเร็จ'); })
+        .markDone(passcode, id);
+    }
+
+    function markSkip(id) {
+      showDashError('');
+      google.script.run
+        .withSuccessHandler(renderQueue)
+        .withFailureHandler(function () { showDashError('อัปเดตไม่สำเร็จ'); })
+        .markSkipped(passcode, id);
+    }
+  </script>
+</body>
+</html>
