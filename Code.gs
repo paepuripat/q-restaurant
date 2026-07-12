@@ -32,16 +32,27 @@ function getTodayString_() {
 }
 
 function issueQueue() {
-  const sheet = getQueueSheet_();
-  const today = getTodayString_();
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (e) {
+    throw new Error('คิวหนาแน่น ลองอีกครั้ง');
+  }
 
-  const rows = sheet.getDataRange().getValues().slice(1);
-  const todayCount = rows.filter(function (row) { return row[1] === today; }).length;
-  const number = todayCount + 1;
-  const id = Utilities.getUuid();
-  const createdAt = new Date().toISOString();
+  try {
+    const sheet = getQueueSheet_();
+    const today = getTodayString_();
 
-  sheet.appendRow([id, today, number, 'waiting', createdAt, '']);
+    const rows = sheet.getDataRange().getValues().slice(1);
+    const todayCount = rows.filter(function (row) { return row[1] === today; }).length;
+    const number = todayCount + 1;
+    const id = Utilities.getUuid();
+    const createdAt = new Date().toISOString();
 
-  return { id: id, number: number, date: today };
+    sheet.appendRow([id, today, number, 'waiting', createdAt, '']);
+
+    return { id: id, number: number, date: today };
+  } finally {
+    lock.releaseLock();
+  }
 }
