@@ -1,6 +1,12 @@
 const QUEUE_SHEET_NAME = 'queue';
 const QUEUE_HEADERS = ['id', 'date', 'number', 'status', 'createdAt', 'calledAt'];
 
+// Easiest way to set your staff passcode: type it between the quotes below and
+// save (Ctrl/Cmd+S). Leave it as '' to use Script Properties (STAFF_PASSCODE)
+// instead — that's the path the clasp/git dev workflow uses, so a real
+// passcode never ends up committed to a public repo.
+const STAFF_PASSCODE = '';
+
 function doGet(e) {
   const page = e.parameter.page;
   let templateName = 'customer';
@@ -111,7 +117,7 @@ function getBoardState() {
 }
 
 function checkPasscode_(passcode) {
-  const expected = PropertiesService.getScriptProperties().getProperty('STAFF_PASSCODE');
+  const expected = STAFF_PASSCODE || PropertiesService.getScriptProperties().getProperty('STAFF_PASSCODE');
   if (!expected || passcode !== expected) {
     throw new Error('รหัสผ่านไม่ถูกต้อง');
   }

@@ -32,10 +32,18 @@ Your copy needs one setting before it's ready: the passcode your staff will
 type in to reach the call-next dashboard.
 
 1. In your new copy, go to **Extensions → Apps Script**.
-2. Click the gear icon (⚙️ **Project Settings**) on the left sidebar.
-3. Scroll to **Script Properties** → **Add script property**.
-4. Property: `STAFF_PASSCODE` — Value: any code your staff will remember.
-5. Click **Save**.
+2. Open **Code.gs** — it's the first file listed.
+3. Near the top, find this line:
+   ```js
+   const STAFF_PASSCODE = '';
+   ```
+4. Type your passcode between the quotes, e.g. `const STAFF_PASSCODE = '1234';`
+5. Save with **Ctrl/Cmd+S**.
+
+That's the whole setting — no menus to hunt through. (If you ever want the
+passcode to live outside the code instead, Project Settings → Script
+Properties → add `STAFF_PASSCODE` there works too; the app checks that as a
+fallback if you leave the line above blank.)
 
 ## Step 3 — Publish it as a live web app
 

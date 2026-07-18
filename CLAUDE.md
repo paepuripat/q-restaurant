@@ -126,7 +126,8 @@ Rules:
 
 **Deliverable:**
 - `staff.html` at `?page=staff`: a passcode field gates the UI; after entry, show today's queue as a list (number, status, created time) with buttons: **เรียกคิวถัดไป** (oldest `waiting` → `called`), **เสร็จ** and **ข้าม** per called row, and **เริ่มวันใหม่** (all of today's `waiting`/`called` → `skipped`).
-- `Code.gs`: `getQueue(passcode)`, `callNext(passcode)`, `markDone(passcode, id)`, `markSkipped(passcode, id)`, `resetDay(passcode)`. **Every one of these validates the passcode server-side** against Script Properties and throws if wrong. All mutating functions take the script lock.
+- `Code.gs`: `getQueue(passcode)`, `callNext(passcode)`, `markDone(passcode, id)`, `markSkipped(passcode, id)`, `resetDay(passcode)`. **Every one of these validates the passcode server-side** and throws if wrong. All mutating functions take the script lock.
+- Passcode source: a `const STAFF_PASSCODE = '';` at the top of `Code.gs`, checked first; if blank, falls back to Script Properties (`STAFF_PASSCODE`). The constant ships blank in this repo — real values never get committed — but it gives someone who copied the Sheet directly (no clasp, no git) a one-line edit instead of a trip through Project Settings.
 - Staff list refreshes after every action and auto-polls every ~5 s.
 
 **Verify:**
@@ -179,7 +180,7 @@ Rules:
 - `clasp push` — upload code. The **test deployment `/dev` URL** always reflects the latest pushed code; use it for all dev/testing.
 - The **`/exec` URL only updates when you redeploy** to the same deployment ID. This is the lane's classic trap — never demo `/exec` after only pushing.
 - Access settings (Execute as: Me, Who has access: Anyone) live in the editor's Deploy → Manage deployments; set once in prebuild, they persist across redeploys.
-- Config (`STAFF_PASSCODE`) lives in Script Properties — nothing secret in code or in the repo.
+- Config (`STAFF_PASSCODE`) lives either in the `Code.gs` constant (left blank in this repo) or in Script Properties — nothing secret ever committed.
 
 ## Coding Conventions
 
@@ -197,7 +198,7 @@ Rules:
 - ❌ Don't call `getValue()`/`setValue()` per cell in loops. Batch.
 - ❌ Don't gate staff actions client-side only. The passcode check lives in every server function.
 - ❌ Don't use time-driven triggers to "push" updates — polling from the client is the lane's model.
-- ❌ Don't hardcode the passcode in code. Script Properties.
+- ❌ Don't commit a real passcode value — `STAFF_PASSCODE` in `Code.gs` must stay `''` in this repo; real values go in Script Properties (dev path) or get typed into the constant only in someone's own private copy (no-code path).
 - ❌ Don't demo on `/dev` in the final shot, and don't expect `/exec` to update on push — redeploy.
 - ❌ Don't add a service worker / PWA install flow. Out of scope.
 
