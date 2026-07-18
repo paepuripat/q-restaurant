@@ -1,106 +1,94 @@
-# Run Your Own Restaurant Queue — No Code Required (5 Minutes)
+# สร้างระบบคิวร้านอาหารของคุณเอง — ไม่ต้องเขียนโค้ด (5 นาที)
 
-Customers scan a QR code at your door, tap one button, and get a queue
-number they can watch update live on their phone. You call the next number
-from a simple, password-protected dashboard. A TV shows "now serving" for
-the whole room.
+ลูกค้าสแกน QR หน้าร้าน กดปุ่มเดียว ได้เลขคิว แล้วดูสถานะคิวอัปเดตสดบนมือถือได้เลย
+ฝั่งร้านเรียกคิวถัดไปจากแดชบอร์ดที่ล็อกด้วยรหัสผ่าน ส่วนจอทีวีก็โชว์ "กำลังเรียกคิว" ให้เห็นทั้งร้าน
 
-It's **100% free**, runs entirely inside Google Sheets, and you don't need
-to write or touch a single line of code to get your own copy running.
+ระบบนี้ **ฟรี 100%** ทำงานอยู่ใน Google Sheets ทั้งหมด และคุณ**ไม่ต้องเขียนโค้ดแม้แต่บรรทัดเดียว**
+เพื่อให้ได้ระบบของตัวเองมาใช้งาน
 
-> Prefer the developer route — command line, git, `clasp`? See
-> [`README.md`](./README.md) instead. Same app, different setup path.
+> ถ้าคุณเป็นสายเดฟ ถนัดใช้ command line, git, `clasp` มากกว่า ดูที่
+> [`README.md`](./README.md) แทนได้เลย — แอปเดียวกัน แค่วิธีติดตั้งคนละแบบ
 
-## What you'll end up with
+## สิ่งที่คุณจะได้
 
-- Your own private Google Sheet that stores every queue ticket.
-- Your own live web link customers tap to get a number.
-- A staff dashboard only your team can access (behind a passcode you pick).
-- A board view you can put on any TV or tablet.
+- Google Sheet ส่วนตัวของคุณเอง ที่เก็บข้อมูลคิวทุกใบ
+- ลิงก์เว็บแอปของคุณเอง ให้ลูกค้ากดเพื่อรับเลขคิว
+- แดชบอร์ดพนักงาน ที่เข้าได้เฉพาะทีมคุณ (ล็อกด้วยรหัสผ่านที่คุณตั้งเอง)
+- หน้าจอบอร์ด เอาไปเปิดบนทีวีหรือแท็บเล็ตตรงไหนก็ได้
 
-## Step 1 — Get your own copy
+## ขั้นตอนที่ 1 — คัดลอกไว้ใช้เอง
 
-Click the link below. Google will ask "Make a copy?" — say yes. This
-copies the Sheet **and** the app logic attached to it into your own Google
-Drive, under your own account. Nothing you do next affects the original.
+กดลิงก์ด้านล่าง Google จะถามว่า "สร้างสำเนา?" (Make a copy) — กด "ตกลง" ได้เลย
+ระบบจะคัดลอกทั้ง Sheet **และ** โค้ดที่ผูกอยู่กับมันไปไว้ใน Google Drive ของคุณเอง
+ภายใต้บัญชีของคุณเอง ทำอะไรต่อจากนี้ในสำเนาของคุณจะไม่กระทบต้นฉบับเลย
 
-**[→ Make your own copy of Queue Restaurant](PASTE_YOUR_TEMPLATE_COPY_LINK_HERE)**
+**[→ คัดลอก Queue Restaurant มาใช้เอง](PASTE_YOUR_TEMPLATE_COPY_LINK_HERE)**
 
-## Step 2 — Set your staff passcode
+## ขั้นตอนที่ 2 — ตั้งรหัสผ่านพนักงาน
 
-Your copy needs one setting before it's ready: the passcode your staff will
-type in to reach the call-next dashboard.
+สำเนาของคุณต้องตั้งค่าอีกหนึ่งอย่างก่อนใช้งานได้: รหัสผ่านที่พนักงานจะพิมพ์
+เพื่อเข้าแดชบอร์ดเรียกคิว
 
-1. In your new copy, go to **Extensions → Apps Script**.
-2. Open **Code.gs** — it's the first file listed.
-3. Near the top, find this line:
+1. ในสำเนาใหม่ของคุณ ไปที่ **Extensions → Apps Script**
+2. เปิดไฟล์ **Code.gs** — เป็นไฟล์แรกในรายการ
+3. หาบรรทัดนี้ใกล้ ๆ ด้านบนของไฟล์:
    ```js
    const STAFF_PASSCODE = '';
    ```
-4. Type your passcode between the quotes, e.g. `const STAFF_PASSCODE = '1234';`
-5. Save with **Ctrl/Cmd+S**.
+4. พิมพ์รหัสผ่านที่ต้องการลงในเครื่องหมายคำพูด เช่น `const STAFF_PASSCODE = '1234';`
+5. กด **Ctrl/Cmd+S** เพื่อบันทึก
 
-That's the whole setting — no menus to hunt through. (If you ever want the
-passcode to live outside the code instead, Project Settings → Script
-Properties → add `STAFF_PASSCODE` there works too; the app checks that as a
-fallback if you leave the line above blank.)
+แค่นี้จบ — ไม่ต้องไปหาเมนูตั้งค่าที่ไหนเลย (ถ้าอยากให้รหัสผ่านไม่ปนอยู่ในโค้ด
+ก็ไปที่ Project Settings → Script Properties → เพิ่ม `STAFF_PASSCODE` ที่นั่นแทนได้เหมือนกัน
+แอปจะเช็กจุดนี้เป็นทางเลือกสำรอง ถ้าเราปล่อยบรรทัดด้านบนว่างไว้)
 
-## Step 3 — Publish it as a live web app
+## ขั้นตอนที่ 3 — เผยแพร่เป็นเว็บแอปจริง
 
-Still in the Apps Script editor:
+อยู่ใน Apps Script editor ต่อ:
 
-1. Click **Deploy** (top right) → **New deployment**.
-2. Click the gear icon next to "Select type" → choose **Web app**.
-3. Description: anything, e.g. `v1`.
-4. **Execute as:** Me.
-5. **Who has access:** Anyone.
-6. Click **Deploy**.
+1. กด **Deploy** (มุมขวาบน) → **New deployment**
+2. กดไอคอนรูปเฟืองข้าง "Select type" → เลือก **Web app**
+3. Description: ใส่อะไรก็ได้ เช่น `v1`
+4. **Execute as:** Me
+5. **Who has access:** Anyone
+6. กด **Deploy**
 
-The first time you do this, Google will show an "unverified app" warning —
-this is normal for any script you (or someone you trust) wrote yourself
-that hasn't gone through Google's public app review. Click **Advanced** →
-**Go to (your project name) (unsafe)** → **Allow**. You're authorizing your
-own script to read and write your own Sheet — nothing is being sent
-anywhere else.
+ครั้งแรกที่ทำแบบนี้ Google จะโชว์คำเตือน "unverified app" — เป็นเรื่องปกติสำหรับ
+สคริปต์ที่คุณ (หรือคนที่คุณเชื่อใจ) เขียนขึ้นเอง ซึ่งยังไม่ได้ผ่านการรีวิวจาก Google
+กด **Advanced** → **Go to (ชื่อโปรเจกต์ของคุณ) (unsafe)** → **Allow**
+คุณกำลังอนุญาตให้สคริปต์ของคุณเองอ่าน/เขียน Sheet ของคุณเอง — ไม่มีข้อมูลอะไรถูกส่งไปที่อื่น
 
-Copy the **Web app URL** it gives you at the end. That's your permanent
-customer-facing link.
+คัดลอก **Web app URL** ที่ได้ตอนท้าย — นั่นคือลิงก์สำหรับลูกค้าถาวรของคุณ
 
-## Step 4 — Try all three views
+## ขั้นตอนที่ 4 — ลองทั้ง 3 หน้าจอ
 
-- **Customers:** the web app URL from Step 3, as-is.
-- **Staff:** the same URL with `?page=staff` added at the end. Enter the
-  passcode from Step 2.
-- **Board / TV:** the same URL with `?page=board` added at the end.
+- **ลูกค้า:** ใช้ Web app URL จากขั้นตอนที่ 3 ตรง ๆ
+- **พนักงาน:** ลิงก์เดิม แต่เติม `?page=staff` ต่อท้าย แล้วใส่รหัสผ่านจากขั้นตอนที่ 2
+- **บอร์ด / ทีวี:** ลิงก์เดิม แต่เติม `?page=board` ต่อท้าย
 
-Tap จองคิว on the customer link — a number should appear, and a new row
-should land in your Sheet's `queue` tab.
+ลองกดจองคิวที่หน้าลูกค้า — ควรมีเลขคิวขึ้นมา และมีแถวใหม่ไปโผล่ในแท็บ `queue` ของ Sheet
 
-## Step 5 — Put it to work
+## ขั้นตอนที่ 5 — เอาไปใช้จริง
 
-- Paste your customer URL into any free QR code generator, print it, and
-  stick it on the door.
-- Bookmark the `?page=staff` link on your counter device, and `?page=board`
-  on whatever screen faces the waiting area.
+- เอาลิงก์หน้าลูกค้าไปใส่ในเว็บสร้าง QR code ฟรี (หาได้ทั่วไป) แล้วปริ้นไปติดหน้าร้าน
+- Bookmark ลิงก์ `?page=staff` ไว้ที่เครื่องหน้าเคาน์เตอร์ และ `?page=board`
+  ไว้ที่จอที่หันไปทางที่นั่งรอ
 
-## If something's not working
+## ถ้าใช้งานไม่ได้ ลองเช็กตรงนี้
 
-- **A Google login screen shows up for customers** — go back to Step 3 and
-  make sure "Who has access" is set to **Anyone**, not "Only myself."
-- **"Authorization required" pop-up on first tap** — expected, one-time,
-  only visible to you as the owner while testing.
-- **You changed something in the code and the live link didn't change** —
-  every code change needs a fresh deployment: **Deploy → Manage
-  deployments → pencil icon → New version → Deploy.** There's no
-  auto-publish here since there's no command line involved.
-- **Wrong passcode always rejected** — double check Script Properties
-  (Step 2) for typos; the value is case-sensitive.
+- **ลูกค้าเจอหน้า login ของ Google** — กลับไปดูขั้นตอนที่ 3 เช็กว่า "Who has access"
+  ตั้งเป็น **Anyone** แล้ว ไม่ใช่ "Only myself"
+- **มี pop-up "Authorization required" ตอนกดครั้งแรก** — ปกติ เกิดแค่ครั้งเดียว
+  และเห็นเฉพาะคุณในฐานะเจ้าของตอนทดสอบเท่านั้น
+- **แก้โค้ดแล้วแต่ลิงก์จริงไม่เปลี่ยน** — ทุกครั้งที่แก้โค้ดต้อง deploy ใหม่เสมอ:
+  **Deploy → Manage deployments → ไอคอนดินสอ → New version → Deploy**
+  ระบบนี้ไม่มี auto-publish เพราะไม่ได้ใช้ command line
+- **ใส่รหัสผ่านถูกแล้วแต่ระบบไม่ยอมรับ** — เช็กที่ `STAFF_PASSCODE` ใน Code.gs
+  (หรือ Script Properties ถ้าใช้ทางนั้น) ว่าพิมพ์ผิดหรือเปล่า ระบบเช็กตัวพิมพ์เล็ก-ใหญ่ด้วย
 
 ---
 
-*Before publishing this post: replace the placeholder link in Step 1 with
-your real template's copy-link. To get it — open your finished, clean
-template Sheet (test data cleared out), set sharing to "Anyone with the
-link — Viewer," copy its URL, and change the `/edit...` part at the end to
-`/copy`. Opening that link is what triggers Drive's "Make a copy" prompt
-for readers.*
+*ก่อนเผยแพร่บทความนี้: แทนที่ลิงก์ในขั้นตอนที่ 1 ด้วยลิงก์คัดลอก template จริงของคุณ
+วิธีหา — เปิด Sheet ต้นแบบที่เสร็จแล้ว (ล้างข้อมูลทดสอบออกให้หมด) ตั้งค่าแชร์เป็น
+"Anyone with the link — Viewer" คัดลอก URL ของมัน แล้วเปลี่ยนส่วน `/edit...` ท้าย URL
+เป็น `/copy` แทน การเปิดลิงก์แบบนั้นคือสิ่งที่ทำให้ Drive เด้งถามว่า "สร้างสำเนา?" ให้ผู้อ่าน*
