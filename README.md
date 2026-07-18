@@ -9,6 +9,10 @@ No servers, no database, no hosting bill — the entire thing runs on
 
 **Live app:** https://script.google.com/macros/s/AKfycbwPh4I_1ItCKk1-jzkTrpY63R28k_cMEOMqub8CWVNZDYhB_82IHhHZ2PIvspp2I51u/exec
 
+> Not a developer? [`BLOG.md`](./BLOG.md) walks through getting your own
+> copy running by clicking "Make a copy" on a Google Sheet — no terminal,
+> no git, no clasp. This README is the command-line / clasp path.
+
 - Customer view: the link above
 - Staff view: append `?page=staff` (passcode required)
 - Board view: append `?page=board`
